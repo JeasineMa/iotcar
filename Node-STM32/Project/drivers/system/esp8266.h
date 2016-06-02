@@ -23,4 +23,7 @@ void ESP8266_InitializeLuaScripts(void);
 
 void ESP8266_USART_IT_Handler(void);
 
+//Add AP mode
+void ESP8266_CreateAP(void);
+
 #endif

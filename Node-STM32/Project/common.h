@@ -19,6 +19,8 @@
 
 #define DBG_MSG(format, ...) printf("[Debug]%s: " format "\r\n", __func__, ##__VA_ARGS__)
 #define ERR_MSG(format, ...) printf("[Error]%s: " format "\r\n", __func__, ##__VA_ARGS__)
+#define INFO_MSG(format, ...) printf("[Info]%s: " format "\r\n", __func__, ##__VA_ARGS__)
+#define CMD_MSG(format, ...) printf("[Cmd]%s: " format "\r\n", __func__, ##__VA_ARGS__)
  
 void RCC_GPIOClockCmd(GPIO_TypeDef* GPIOx, FunctionalState state);
 void RCC_USARTClockCmd(USART_TypeDef* USARTx, FunctionalState state);

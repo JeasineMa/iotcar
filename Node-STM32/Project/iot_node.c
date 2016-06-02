@@ -233,11 +233,38 @@ void IoTNode_HandleControl(const char* param)
 {
     //temporarily store control command to avoid
     // spending too much time in interrupt context
+     INFO_MSG("%s/r/n",control_buf);
     if(control_buf[0] == '\0'){
         strncpy(control_buf, param, sizeof(control_buf)-1);
         control_buf[sizeof(control_buf)-1] = '\0';
     }
 }
+
+//FIXME
+void initHotspot(void)
+{
+    uint32_t id[3];
+    char name_buf[32];
+    SysTick_t tmr = GetSystemTick();
+    
+    while (!ESP8266_IsStarted()) {
+        if(GetSystemTick()-tmr > ESP8266_BOOT_TIMEOUT) {
+            ERR_MSG("ESP8266 booting timed out");
+            if(ESP8266_CheckLuaScripts()){
+                DBG_MSG("Restarting ESP8266...");
+                ESP8266_Restart();
+            }else{
+                DBG_MSG("Lua scripts not found, initializing...");
+                ESP8266_InitializeLuaScripts();
+                ESP8266_Restart();
+            }
+            tmr = GetSystemTick();
+        }
+    }
+    ESP8266_CreateAP();
+    LED_GREEN(true);
+}
+
 
 void IoTNode_Begin()
 {
@@ -245,7 +272,8 @@ void IoTNode_Begin()
     DBG_MSG("%d actuators defined", actuators_count);
     initActuators();
     initSensors();
-    initNetwork();
+    initNetwork();   
+    //initHotspot();
     reportNodeInfo();
     while (1) {
         if(control_buf[0] != '\0'){

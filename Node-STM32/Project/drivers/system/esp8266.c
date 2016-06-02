@@ -28,9 +28,11 @@ static void RedirectUSBToESP8266(uint8_t* data_buffer, uint8_t Nb_bytes)
 
 static void gotResponse(char *token, char *param)
 {
-    DBG_MSG("[[%s]][[%s]]", token, param);
+    //DBG_MSG("[[%s]][[%s]]", token, param);
     if(strcmp(token, "control") == 0)
-        IoTNode_HandleControl(param);
+        //IoTNode_HandleControl(param);  FIXME
+        printf("&%s^\r\n", param);
+        //INFO_MSG("%s/r/n",param);
     if(strcmp(token, "connected") == 0)
         mqtt_connected = true;
     else if(strcmp(token, "offline") == 0)
@@ -54,7 +56,7 @@ static void parse8266Output(uint8_t in)
     enum{STATE_WAIT, STATE_TOKEN, STATE_PARAM};
     static uint8_t state = STATE_WAIT;
     static int tokenLen, paramLen;
-    static char tokenBuf[16], paramBuf[16];
+    static char tokenBuf[16], paramBuf[50];   //FIXME    cannot be too short
     switch(state){
     case STATE_WAIT:
         if(in == '#'){
@@ -150,7 +152,8 @@ void ESP8266_InitMqttWithChipID()
 {
     ESP8266_LUA_CMD("c=require('comm');");
     Delay_ms(50);
-    ESP8266_LUA_CMD("c.init('i_' .. node.chipid())");
+    //ESP8266_LUA_CMD("c.init('i_' .. node.chipid())");
+    ESP8266_LUA_CMD("c.init('iotcar')");
 }
 
 void ESP8266_MqttConnect(char *ip, int port)
@@ -228,3 +231,28 @@ void ESP8266_InitializeLuaScripts(void)
 
     while(!initialize_done);
 }
+
+/*
+ * create an AP hotspot with SSID and passswd defined in func.h(with dhcp service), then report its IP and client table(for a few seconds).)
+ */  
+void ESP8266_CreateAP(void)
+{
+    ESP8266_LUA_CMD("wifi.setmode(wifi.SOFTAP)");
+    ESP8266_LUA_CMD("cfg = {}");
+    ESP8266_LUA_CMD("cfg.ssid = \"%s\"", AP_SSID);
+    ESP8266_LUA_CMD("cfg.pwd = \"%s\"", AP_PASSWD);
+    ESP8266_LUA_CMD("wifi.ap.config(cfg)");
+    Delay_ms(3000);
+    // ESP8266_LUA_CMD("print('#control+'..(wifi.ap.getip()))");
+    ESP8266_LUA_CMD("dhcp_config ={}");
+    ESP8266_LUA_CMD("dhcp_config.start = \"192.168.1.10\"");
+    ESP8266_LUA_CMD("wifi.ap.dhcp.config(dhcp_config)");
+    ESP8266_LUA_CMD("wifi.ap.dhcp.start()");
+    // ESP8266_LUA_CMD("wifi.eventmon.register(wifi.eventmon.AP_STACONNECTED, function(T)");
+    // ESP8266_LUA_CMD("print('#control+AP-STATION-CONNECTED'..'MAC:'..T.MAC)");
+    // ESP8266_LUA_CMD("end)");
+    INFO_MSG("AP_hotspot&DHCP start");
+}
+
+
+
